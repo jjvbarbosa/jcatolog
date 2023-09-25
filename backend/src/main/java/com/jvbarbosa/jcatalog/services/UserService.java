@@ -1,10 +1,11 @@
 package com.jvbarbosa.jcatalog.services;
 
-import com.jvbarbosa.jcatalog.dto.ProductDTO;
-import com.jvbarbosa.jcatalog.entities.Category;
-import com.jvbarbosa.jcatalog.entities.Product;
-import com.jvbarbosa.jcatalog.repositories.CategoryRepository;
-import com.jvbarbosa.jcatalog.repositories.ProductRepository;
+import com.jvbarbosa.jcatalog.dto.UserDTO;
+import com.jvbarbosa.jcatalog.dto.UserInsertDTO;
+import com.jvbarbosa.jcatalog.entities.Role;
+import com.jvbarbosa.jcatalog.entities.User;
+import com.jvbarbosa.jcatalog.repositories.RoleRepository;
+import com.jvbarbosa.jcatalog.repositories.UserRepository;
 import com.jvbarbosa.jcatalog.services.exceptions.DatabaseException;
 import com.jvbarbosa.jcatalog.services.exceptions.ResourceNotFoundException;
 import jakarta.persistence.EntityNotFoundException;
@@ -12,48 +13,55 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class ProductService {
+public class UserService {
 
     @Autowired
-    private ProductRepository repository;
+    private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private CategoryRepository categoryRepository;
+    private UserRepository repository;
+
+    @Autowired
+    private RoleRepository roleRepository;
 
     @Transactional(readOnly = true)
-    public ProductDTO findById(Long id) {
-        Product entity = repository.findById(id).orElseThrow(
+    public UserDTO findById(Long id) {
+        User entity = repository.findById(id).orElseThrow(
                 () -> new ResourceNotFoundException("Resource with ID '" + id + "' not found"));
-        return new ProductDTO(entity, entity.getCategories());
+        return new UserDTO(entity);
     }
 
     @Transactional(readOnly = true)
-    public Page<ProductDTO> findAll(Pageable pageable) {
-        return repository.findAll(pageable).map(x -> new ProductDTO(x));
+    public Page<UserDTO> findAll(Pageable pageable) {
+        return repository.findAll(pageable).map(x -> new UserDTO(x));
     }
 
     @Transactional
-    public ProductDTO insert(ProductDTO dto) {
-        Product entity = new Product();
+    public UserDTO insert(UserInsertDTO dto) {
+        User entity = new User();
+
         copyDtoToEntity(dto, entity);
+        entity.setPassword(passwordEncoder.encode(dto.getPassword()));
+
         entity = repository.save(entity);
 
-        return new ProductDTO(entity);
+        return new UserDTO(entity);
     }
 
     @Transactional
-    public ProductDTO update(Long id, ProductDTO dto) {
+    public UserDTO update(Long id, UserDTO dto) {
         try {
-            Product entity = repository.getReferenceById(id);
+            User entity = repository.getReferenceById(id);
             copyDtoToEntity(dto, entity);
             entity = repository.save(entity);
 
-            return new ProductDTO(entity);
+            return new UserDTO(entity);
         }
         catch (EntityNotFoundException e) {
             throw new ResourceNotFoundException("Resource with ID '" + id + "' not found");
@@ -73,18 +81,15 @@ public class ProductService {
         }
     }
 
-    private void copyDtoToEntity(ProductDTO dto, Product entity) {
+    private void copyDtoToEntity(UserDTO dto, User entity) {
+        entity.setFirstName(dto.getFirstName());
+        entity.setLastName(dto.getLastName());
+        entity.setEmail(dto.getEmail());
 
-        entity.setName(dto.getName());
-        entity.setDescription(dto.getDescription());
-        entity.setDate(dto.getDate());
-        entity.setImgUrl(dto.getImgUrl());
-        entity.setPrice(dto.getPrice());
-
-        entity.getCategories().clear();
-        dto.getCategories().forEach(catDto -> {
-            Category category = categoryRepository.getReferenceById(catDto.getId());
-            entity.getCategories().add(category);
+        entity.getRoles().clear();
+        dto.getRoles().forEach(roleDTO -> {
+            Role role = roleRepository.getReferenceById(roleDTO.getId());
+            entity.getRoles().add(role);
         });
     }
 }
