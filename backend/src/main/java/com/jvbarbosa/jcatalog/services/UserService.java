@@ -2,6 +2,7 @@ package com.jvbarbosa.jcatalog.services;
 
 import com.jvbarbosa.jcatalog.dto.UserDTO;
 import com.jvbarbosa.jcatalog.dto.UserInsertDTO;
+import com.jvbarbosa.jcatalog.dto.UserUpdateDTO;
 import com.jvbarbosa.jcatalog.entities.Role;
 import com.jvbarbosa.jcatalog.entities.User;
 import com.jvbarbosa.jcatalog.repositories.RoleRepository;
@@ -55,7 +56,7 @@ public class UserService {
     }
 
     @Transactional
-    public UserDTO update(Long id, UserDTO dto) {
+    public UserDTO update(Long id, UserUpdateDTO dto) {
         try {
             User entity = repository.getReferenceById(id);
             copyDtoToEntity(dto, entity);
