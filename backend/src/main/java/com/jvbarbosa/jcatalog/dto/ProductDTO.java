@@ -3,6 +3,10 @@ package com.jvbarbosa.jcatalog.dto;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.jvbarbosa.jcatalog.entities.Category;
 import com.jvbarbosa.jcatalog.entities.Product;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.PastOrPresent;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 
 import java.time.Instant;
 import java.util.HashSet;
@@ -11,10 +15,15 @@ import java.util.Set;
 public class ProductDTO {
 
     private Long id;
+
+    @Size(min = 5, max = 60, message = "Name must be between 5 and 60 characters")
+    @NotBlank(message = "Required field")
     private String name;
     private String description;
+    @Positive(message = "Price must be positive")
     private Double price;
     private String imgUrl;
+    @PastOrPresent(message = "Product date cannot be in the future")
     private Instant date;
     private Set<CategoryDTO> categories = new HashSet<>();
 
