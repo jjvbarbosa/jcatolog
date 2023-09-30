@@ -27,9 +27,13 @@ public class ProductController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<ProductDTO>> findAll(Pageable pageable) {
-        Page<ProductDTO> result = service.findAll(pageable);
-        return ResponseEntity.ok(result);
+    public ResponseEntity<Page<ProductDTO>> findAll(
+            Pageable pageable,
+            @RequestParam(value = "name", defaultValue = "") String name,
+            @RequestParam(value = "categoriesId", defaultValue = "0") String categoriesId
+    ) {
+        Page<ProductDTO> list = service.findAll(pageable, name, categoriesId);
+        return ResponseEntity.ok(list);
     }
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_OPERATOR')")
