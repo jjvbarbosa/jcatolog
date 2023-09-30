@@ -5,6 +5,7 @@ import com.jvbarbosa.jcatalog.dto.UserInsertDTO;
 import com.jvbarbosa.jcatalog.dto.UserUpdateDTO;
 import com.jvbarbosa.jcatalog.entities.Role;
 import com.jvbarbosa.jcatalog.entities.User;
+import com.jvbarbosa.jcatalog.projections.UserDetailsProjection;
 import com.jvbarbosa.jcatalog.repositories.RoleRepository;
 import com.jvbarbosa.jcatalog.repositories.UserRepository;
 import com.jvbarbosa.jcatalog.services.exceptions.DatabaseException;
@@ -14,13 +15,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
-public class UserService {
+public class UserService implements UserDetailsService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -80,6 +86,24 @@ public class UserService {
         catch (DataIntegrityViolationException e) {
             throw new DatabaseException("Referential Integrity Violation");
         }
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+
+        List<UserDetailsProjection> result = repository.searchUserAndRolesByEmail(username);
+        if (result.isEmpty()) {
+            throw new UsernameNotFoundException("Email not found");
+        }
+
+        User user = new User();
+        user.setEmail(result.get(0).getUsername());
+        user.setPassword(result.get(0).getPassword());
+        for (UserDetailsProjection projection : result) {
+            user.addRole(new Role(projection.getRoleId(), projection.getAuthority()));
+        }
+
+        return user;
     }
 
     private void copyDtoToEntity(UserDTO dto, User entity) {
