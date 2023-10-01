@@ -8,6 +8,7 @@ import com.jvbarbosa.jcatalog.repositories.CategoryRepository;
 import com.jvbarbosa.jcatalog.repositories.ProductRepository;
 import com.jvbarbosa.jcatalog.services.exceptions.DatabaseException;
 import com.jvbarbosa.jcatalog.services.exceptions.ResourceNotFoundException;
+import com.jvbarbosa.jcatalog.utils.Util;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -49,6 +50,8 @@ public class ProductService {
         List<Long> productIds = page.map(x -> x.getId()).toList();
 
         List<Product> entities = repository.searchProductsWithCategories(productIds);
+        entities = Util.replace(page.getContent(), entities);
+
         List<ProductDTO> dtos = entities.stream().map(p -> new ProductDTO(p, p.getCategories())).toList();
 
         return new PageImpl<>(dtos, page.getPageable(), page.getTotalElements());
