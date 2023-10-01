@@ -1,7 +1,6 @@
 package com.jvbarbosa.jcatalog.utils;
 
-import com.jvbarbosa.jcatalog.entities.Product;
-import com.jvbarbosa.jcatalog.projections.ProductProjection;
+import com.jvbarbosa.jcatalog.projections.IdProjection;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -9,15 +8,15 @@ import java.util.List;
 import java.util.Map;
 
 public class Util {
-    public static List<Product> replace(List<ProductProjection> ordered, List<Product> unordered) {
-        Map<Long, Product> map = new HashMap<>();
+    public static <ID> List<? extends IdProjection<ID>> replace(List<? extends IdProjection<ID>> ordered, List<? extends IdProjection<ID>> unordered) {
+        Map<ID, IdProjection<ID>> map = new HashMap<>();
 
-        for (Product obj : unordered) {
+        for (IdProjection<ID> obj : unordered) {
             map.put(obj.getId(), obj);
         }
 
-        List<Product> result = new ArrayList<>();
-        for (ProductProjection obj : ordered) {
+        List<IdProjection<ID>> result = new ArrayList<>();
+        for (IdProjection<ID> obj : ordered) {
             result.add(map.get(obj.getId()));
         }
 
