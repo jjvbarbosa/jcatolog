@@ -22,6 +22,13 @@ public class UserController {
     @Autowired
     private UserService service;
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_OPERATOR')")
+    @GetMapping(value = "/me")
+    public ResponseEntity<UserDTO> findMyProfile() {
+        UserDTO result = service.findMyProfile();
+        return ResponseEntity.ok(result);
+    }
+
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping(value = "/{id}")
     public ResponseEntity<UserDTO> findById(@PathVariable Long id) {
